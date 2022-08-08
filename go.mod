@@ -2,7 +2,9 @@ module github.com/sumup-oss/gocat
 
 require (
 	github.com/kelseyhightower/envconfig v1.3.0
+	github.com/linuxkit/virtsock v0.0.0-20220523201153-1a23e78aa7a2
 	github.com/magefile/mage v1.8.0
+	github.com/mdlayher/vsock v1.1.1
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177
 	github.com/spf13/cobra v0.0.3
 	github.com/stretchr/testify v1.4.0
