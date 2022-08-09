@@ -15,9 +15,6 @@
 package cmd
 
 import (
-	"github.com/sumup-oss/go-pkgs/logger"
-	"github.com/sumup-oss/go-pkgs/os"
-
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +23,7 @@ const (
 	DefaultBufferSize = 16384
 )
 
-func NewRootCmd(osExecutor os.OsExecutor, logger logger.Logger) *cobra.Command {
+func NewRootCmd() *cobra.Command {
 	cmdInstance := &cobra.Command{
 		Use:   "gocat",
 		Short: "gocat cli utility",
@@ -42,10 +39,12 @@ func NewRootCmd(osExecutor os.OsExecutor, logger logger.Logger) *cobra.Command {
 	}
 
 	cmdInstance.AddCommand(
-		NewFakeCmd(logger),
-		NewTCPToUnixCmd(logger),
-		NewUnixToTCPCmd(logger),
-		NewVersionCmd(osExecutor),
+		NewFakeCmd(),
+		NewTCPToUnixCmd(),
+		NewUnixToTCPCmd(),
+		NewUDPToVsockCmd(),
+		NewHvsockToUDPCmd(),
+		NewVersionCmd(),
 	)
 	return cmdInstance
 }

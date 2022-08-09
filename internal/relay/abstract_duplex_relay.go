@@ -17,17 +17,16 @@ package relay
 import (
 	"context"
 	"io"
+	"log"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/palantir/stacktrace"
-	"github.com/sumup-oss/go-pkgs/logger"
 )
 
 type AbstractDuplexRelay struct {
 	healthCheckInterval time.Duration
-	logger              logger.Logger
 	sourceName          string
 	destinationName     string
 	destinationAddr     string
@@ -61,7 +60,7 @@ func (r *AbstractDuplexRelay) Relay(ctx context.Context) error {
 			continue
 		}
 
-		r.logger.Infof("Established connection to %s", conn.RemoteAddr())
+		log.Printf("Established connection to %s", conn.RemoteAddr())
 		go r.handleConnection(ctx, conn)
 	}
 }
@@ -75,7 +74,7 @@ func (r *AbstractDuplexRelay) healthCheckSource(ctx context.Context, cancel cont
 	// NOTE: Dial source to make sure it's alive
 	conn, err := r.dialSourceConn(ctx)
 	if err != nil {
-		r.logger.Errorf(
+		log.Printf(
 			"Could not dial %s for health check. Error: %s\n",
 			r.sourceName,
 			err,
@@ -92,7 +91,7 @@ func (r *AbstractDuplexRelay) healthCheckSource(ctx context.Context, cancel cont
 			// NOTE: Dial source to make sure it's alive
 			conn, err := r.dialSourceConn(ctx)
 			if err != nil {
-				r.logger.Errorf(
+				log.Printf(
 					"Could not dial %s for health check. Error: %s\n",
 					r.sourceName,
 					err,
@@ -109,7 +108,7 @@ func (r *AbstractDuplexRelay) healthCheckSource(ctx context.Context, cancel cont
 func (r *AbstractDuplexRelay) handleConnection(ctx context.Context, conn net.Conn) {
 	defer func(conn net.Conn) {
 		_ = conn.Close()
-		logger.Infof("Closed connection to %s %s", r.destinationName, conn.RemoteAddr())
+		log.Printf("Closed connection to %s %s", r.destinationName, conn.RemoteAddr())
 	}(conn)
 
 	// NOTE: Accepted connection at `dst` address
@@ -117,11 +116,11 @@ func (r *AbstractDuplexRelay) handleConnection(ctx context.Context, conn net.Con
 	// we're not leaking goroutines by waiting on half-closed connections.
 	destDeadlineConn := NewDeadlineConnection(conn, writeDeadlineTimeout, readDeadlineTimeout)
 
-	r.logger.Infof("Handling connection from %s %s", r.destinationName, destDeadlineConn.remoteAddress)
+	log.Printf("Handling connection from %s %s", r.destinationName, destDeadlineConn.remoteAddress)
 
 	sourceConn, err := r.dialSourceConn(ctx)
 	if err != nil {
-		r.logger.Errorf(
+		log.Printf(
 			"Could not read from source %s. Error: %s",
 			r.sourceName,
 			err,
@@ -150,7 +149,7 @@ func (r *AbstractDuplexRelay) handleConnection(ctx context.Context, conn net.Con
 				destDeadlineConn.Close()
 
 				if err == io.EOF {
-					r.logger.Debugf(
+					log.Printf(
 						"Reached EOF of %s %s. Stopping reading",
 						r.sourceName,
 						sourceConn.RemoteAddr(),
@@ -158,7 +157,7 @@ func (r *AbstractDuplexRelay) handleConnection(ctx context.Context, conn net.Con
 					return
 				}
 
-				r.logger.Debugf(
+				log.Printf(
 					"Could not read from %s %s. Error: %s\n",
 					r.sourceName,
 					sourceConn.RemoteAddr(),
@@ -187,7 +186,7 @@ func (r *AbstractDuplexRelay) handleConnection(ctx context.Context, conn net.Con
 			sourceConn.Close()
 
 			if err == io.EOF {
-				r.logger.Debugf(
+				log.Printf(
 					"Reached EOF of %s %s. Stopping reading",
 					r.destinationName,
 					destDeadlineConn.remoteAddress,
@@ -195,7 +194,7 @@ func (r *AbstractDuplexRelay) handleConnection(ctx context.Context, conn net.Con
 				break
 			}
 
-			r.logger.Debugf(
+			log.Printf(
 				"Could not read from %s %s. Error: %s",
 				r.destinationName,
 				destDeadlineConn.remoteAddress,
@@ -211,7 +210,7 @@ func (r *AbstractDuplexRelay) handleConnection(ctx context.Context, conn net.Con
 		// NOTE: Pad to the read bytes to remove 0s
 		_, err = sourceConn.Write(buffer[:readBytes])
 		if err != nil {
-			r.logger.Errorf(
+			log.Printf(
 				"Could not write to %s %s. Error: %s",
 				r.sourceName,
 				sourceConn.RemoteAddr(),

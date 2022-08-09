@@ -27,31 +27,31 @@ import (
 	"github.com/sumup-oss/gocat/internal/relay"
 )
 
-func NewTCPToUnixCmd() *cobra.Command {
-	var tcpToUnixSocketPath string
-	var tcpToUnixAddressPath string
+func NewUDPToVsockCmd() *cobra.Command {
+	var udpToVsockAddress string
+	var udpToVsockPort string
 	var bufferSize int
 	var tcpToUnixHealthCheckInterval time.Duration
 
 	cmdInstance := &cobra.Command{
-		Use:   "tcp-to-unix",
-		Short: "relay from a TCP source to unix domain socket",
-		Long:  `relay from a TCP source to unix domain socket`,
+		Use:   "udp-to-vsock",
+		Short: "relay from a UDP source to vsock",
+		Long:  `relay from a UDP source to vsock`,
 		RunE: func(command *cobra.Command, args []string) error {
 			// nolint: gocritic
-			if len(tcpToUnixAddressPath) < 0 {
+			if len(udpToVsockPort) < 0 {
 				return stacktrace.NewError("blank/empty `src` specified")
 			}
 
 			// nolint: gocritic
-			if len(tcpToUnixSocketPath) < 0 {
+			if len(udpToVsockAddress) < 0 {
 				return stacktrace.NewError("blank/empty `dst` specified")
 			}
 
-			relayer, err := relay.NewTCPtoUnixSocket(
+			relayer, err := relay.NewUDPtoVsock(
 				tcpToUnixHealthCheckInterval,
-				tcpToUnixAddressPath,
-				tcpToUnixSocketPath,
+				udpToVsockPort,
+				udpToVsockAddress,
 				bufferSize,
 			)
 			if err != nil {
@@ -71,17 +71,14 @@ func NewTCPToUnixCmd() *cobra.Command {
 				<-osSignalCh
 				signal.Stop(osSignalCh)
 
-				_ = os.RemoveAll(tcpToUnixSocketPath)
 				cancelFunc()
 			}()
 
 			err = relayer.Relay(ctx)
 			if err != nil {
-				_ = os.RemoveAll(tcpToUnixSocketPath)
 				return stacktrace.Propagate(err, "couldn't relay from TCP to unix socket")
 			}
 
-			_ = os.RemoveAll(tcpToUnixSocketPath)
 			return nil
 		},
 	}
@@ -92,10 +89,10 @@ func NewTCPToUnixCmd() *cobra.Command {
 		30*time.Second,
 		"health check interval for `src`, e.g values are 30m, 60s, 1h.",
 	)
-	cmdInstance.Flags().StringVar(&tcpToUnixAddressPath, "src", "", "source of TCP address")
+	cmdInstance.Flags().StringVar(&udpToVsockPort, "src", "", "source of TCP address")
 	_ = cmdInstance.MarkFlagRequired("src")
 	cmdInstance.Flags().StringVar(
-		&tcpToUnixSocketPath,
+		&udpToVsockAddress,
 		"dst",
 		"",
 		"destination of unix domain socket",

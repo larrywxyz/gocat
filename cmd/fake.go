@@ -15,17 +15,17 @@
 package cmd
 
 import (
+	"log"
 	"net"
 	"os"
 	"time"
 
 	"github.com/palantir/stacktrace"
-	"github.com/sumup-oss/go-pkgs/logger"
 
 	"github.com/spf13/cobra"
 )
 
-func NewFakeCmd(logger logger.Logger) *cobra.Command {
+func NewFakeCmd() *cobra.Command {
 	cmdInstance := &cobra.Command{
 		Use:   "fake",
 		Short: "fake unix domain socket server",
@@ -41,10 +41,10 @@ func NewFakeCmd(logger logger.Logger) *cobra.Command {
 			for {
 				conn, err := l.Accept()
 				if err != nil {
-					logger.Warnf("Connection error: %s", err)
+					log.Printf("Connection error: %s", err)
 				}
 
-				logger.Infof("Opened connection from remote addr: %s", conn.RemoteAddr())
+				log.Printf("Opened connection from remote addr: %s", conn.RemoteAddr())
 
 				go func(innerConn net.Conn) {
 					for {

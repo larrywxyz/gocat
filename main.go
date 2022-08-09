@@ -15,48 +15,12 @@
 package main
 
 import (
-	"fmt"
-
-	log "github.com/sumup-oss/go-pkgs/logger"
-	"github.com/sumup-oss/go-pkgs/os"
-
 	"github.com/sumup-oss/gocat/cmd"
-	"github.com/sumup-oss/gocat/internal/config"
 )
 
 func main() {
-	osExecutor := &os.RealOsExecutor{}
-	configInstance, err := config.NewConfig()
-	if err != nil {
-		//nolint:errcheck,staticcheck
-		fmt.Fprintf(osExecutor.Stderr(), err.Error())
-		osExecutor.Exit(1)
-	}
-
-	switch configInstance.LogLevel {
-	case "DEBUG":
-		log.SetLevel(log.DebugLevel)
-	case "ERROR":
-		log.SetLevel(log.ErrorLevel)
-	case "FATAL":
-		log.SetLevel(log.FatalLevel)
-	case "INFO":
-		log.SetLevel(log.InfoLevel)
-	case "PANIC":
-		log.SetLevel(log.PanicLevel)
-	case "WARN":
-		log.SetLevel(log.WarnLevel)
-	default:
-		log.Fatalf("invalid log level %s. Make sure it's upper-case", configInstance.LogLevel)
-	}
-
-	logger := log.GetLogger()
-	err = cmd.NewRootCmd(osExecutor, logger).Execute()
+	err := cmd.NewRootCmd().Execute()
 	if err == nil {
 		return
 	}
-
-	//nolint:errcheck,staticcheck
-	fmt.Fprintf(osExecutor.Stderr(), err.Error())
-	osExecutor.Exit(1)
 }

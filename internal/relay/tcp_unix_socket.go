@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/palantir/stacktrace"
-	"github.com/sumup-oss/go-pkgs/logger"
 )
 
 const tcpKeepAlivePeriod = 15 * time.Second
@@ -32,7 +31,6 @@ type TCPtoUnixsocket struct {
 }
 
 func NewTCPtoUnixSocket(
-	logger logger.Logger,
 	healthCheckInterval time.Duration,
 	tcpAddress,
 	unixSocketPath string,
@@ -58,7 +56,6 @@ func NewTCPtoUnixSocket(
 	return &TCPtoUnixsocket{
 		AbstractDuplexRelay{
 			healthCheckInterval: healthCheckInterval,
-			logger:              logger,
 			sourceName:          "TCP connection",
 			destinationName:     "unix socket",
 			destinationAddr:     unixSocketPath,

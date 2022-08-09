@@ -21,9 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palantir/stacktrace"
-	"github.com/sumup-oss/go-pkgs/logger"
 	"github.com/linuxkit/virtsock/pkg/hvsock"
+	"github.com/palantir/stacktrace"
 )
 
 type HvsockUDP struct {
@@ -31,12 +30,11 @@ type HvsockUDP struct {
 }
 
 func NewHvsockUdp(
-	logger logger.Logger,
 	healthCheckInterval time.Duration,
 	hvsockPath,
 	udpAddress string,
 	bufferSize int,
-) (*UnixSocketTCP, error) {
+) (*HvsockUDP, error) {
 	udpAddressParts := strings.Split(udpAddress, ":")
 	if len(udpAddressParts) != 2 {
 		return nil, stacktrace.NewError(
@@ -54,10 +52,9 @@ func NewHvsockUdp(
 		)
 	}
 
-	return &UnixSocketTCP{
+	return &HvsockUDP{
 		AbstractDuplexRelay{
 			healthCheckInterval: healthCheckInterval,
-			logger:              logger,
 			bufferSize:          bufferSize,
 			sourceName:          "hvsock",
 			destinationName:     "UDP connection",

@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/palantir/stacktrace"
-	"github.com/sumup-oss/go-pkgs/logger"
 )
 
 type UnixSocketTCP struct {
@@ -31,7 +30,6 @@ type UnixSocketTCP struct {
 }
 
 func NewUnixSocketTCP(
-	logger logger.Logger,
 	healthCheckInterval time.Duration,
 	unixSocketPath,
 	tcpAddress string,
@@ -62,7 +60,6 @@ func NewUnixSocketTCP(
 	return &UnixSocketTCP{
 		AbstractDuplexRelay{
 			healthCheckInterval: healthCheckInterval,
-			logger:              logger,
 			bufferSize:          bufferSize,
 			sourceName:          "unix socket",
 			destinationName:     "TCP connection",

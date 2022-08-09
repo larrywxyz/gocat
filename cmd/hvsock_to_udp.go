@@ -23,16 +23,15 @@ import (
 
 	"github.com/palantir/stacktrace"
 	"github.com/spf13/cobra"
-	"github.com/sumup-oss/go-pkgs/logger"
 
 	"github.com/sumup-oss/gocat/internal/relay"
 )
 
-func NewHvsockToUDPCmd(logger logger.Logger) *cobra.Command {
-	var hvsockToUDPSocketPath string
-	var hvsockToUDPAddressPath string
+func NewHvsockToUDPCmd() *cobra.Command {
+	var hvsockToUdpPath string
+	var hvsockToUdpAddress string
 	var bufferSize int
-	var hvsockToUDPHealthCheckDuration time.Duration
+	var unixToTCPHealthCheckDuration time.Duration
 
 	cmdInstance := &cobra.Command{
 		Use:   "hvsock-to-udp",
@@ -40,20 +39,19 @@ func NewHvsockToUDPCmd(logger logger.Logger) *cobra.Command {
 		Long:  `relay from a hvsock source to udp clients`,
 		RunE: func(command *cobra.Command, args []string) error {
 			// nolint: gocritic
-			if len(hvsockToUDPSocketPath) < 0 {
+			if len(hvsockToUdpPath) < 0 {
 				return stacktrace.NewError("blank/empty `src` specified")
 			}
 
 			// nolint: gocritic
-			if len(hvsockToUDPAddressPath) < 0 {
+			if len(hvsockToUdpAddress) < 0 {
 				return stacktrace.NewError("blank/empty `dst` specified")
 			}
 
-			relayer, err := relay.NewUnixSocketTCP(
-				logger,
-				hvsockToUDPHealthCheckDuration,
-				hvsockToUDPSocketPath,
-				hvsockToUDPAddressPath,
+			relayer, err := relay.NewHvsockUdp(
+				unixToTCPHealthCheckDuration,
+				hvsockToUdpPath,
+				hvsockToUdpAddress,
 				bufferSize,
 			)
 			if err != nil {
@@ -81,20 +79,20 @@ func NewHvsockToUDPCmd(logger logger.Logger) *cobra.Command {
 	}
 
 	cmdInstance.Flags().DurationVar(
-		&hvsockToUDPHealthCheckDuration,
+		&unixToTCPHealthCheckDuration,
 		"health-check-interval",
 		30*time.Second,
 		"health check interval for `src`, e.g values are 30m, 60s, 1h.",
 	)
 	cmdInstance.Flags().StringVar(
-		&hvsockToUDPSocketPath,
+		&hvsockToUdpPath,
 		"src",
 		"",
 		"source of unix domain socket",
 	)
 	_ = cmdInstance.MarkFlagRequired("src")
 	cmdInstance.Flags().StringVar(
-		&hvsockToUDPAddressPath,
+		&hvsockToUdpAddress,
 		"dst",
 		"",
 		"destination to TCP listen",

@@ -23,12 +23,11 @@ import (
 
 	"github.com/palantir/stacktrace"
 	"github.com/spf13/cobra"
-	"github.com/sumup-oss/go-pkgs/logger"
 
 	"github.com/sumup-oss/gocat/internal/relay"
 )
 
-func NewUnixToTCPCmd(logger logger.Logger) *cobra.Command {
+func NewUnixToTCPCmd() *cobra.Command {
 	var unixToTCPSocketPath string
 	var unixToTCPAddressPath string
 	var bufferSize int
@@ -50,7 +49,6 @@ func NewUnixToTCPCmd(logger logger.Logger) *cobra.Command {
 			}
 
 			relayer, err := relay.NewUnixSocketTCP(
-				logger,
 				unixToTCPHealthCheckDuration,
 				unixToTCPSocketPath,
 				unixToTCPAddressPath,

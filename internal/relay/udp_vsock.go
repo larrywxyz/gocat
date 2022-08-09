@@ -21,9 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palantir/stacktrace"
-	"github.com/sumup-oss/go-pkgs/logger"
 	"github.com/mdlayher/vsock"
+	"github.com/palantir/stacktrace"
 )
 
 type UDPtoVsock struct {
@@ -31,7 +30,6 @@ type UDPtoVsock struct {
 }
 
 func NewUDPtoVsock(
-	logger logger.Logger,
 	healthCheckInterval time.Duration,
 	udpAddress,
 	vsockPort string,
@@ -57,13 +55,12 @@ func NewUDPtoVsock(
 	return &UDPtoVsock{
 		AbstractDuplexRelay{
 			healthCheckInterval: healthCheckInterval,
-			logger:              logger,
 			sourceName:          "UDP connection",
 			destinationName:     "vsock",
 			destinationAddr:     vsockPort,
 			bufferSize:          bufferSize,
 			dialSourceConn: func(ctx context.Context) (net.Conn, error) {
-				dialer := &net.Dialer{} 	
+				dialer := &net.Dialer{}
 				conn, err := dialer.DialContext(
 					ctx,
 					"udp",
