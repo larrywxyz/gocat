@@ -15,6 +15,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/sumup-oss/gocat/cmd"
 )
 
@@ -23,4 +25,22 @@ func main() {
 	if err == nil {
 		return
 	}
+	fmt.Println(err)
+
+	// VMID, err := hvsock.GUIDFromString("")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// ServiceID, err := hvsock.GUIDFromString("")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// addrz := hvsock.Addr{
+	// 	VMID:      VMID,
+	// 	ServiceID: ServiceID,
+	// }
+	// _, err = hvsock.Listen(addrz)
+	// if err != nil {
+	// 	panic(err)
+	// }
 }

@@ -63,13 +63,13 @@ func NewUDPtoVsock(
 				dialer := &net.Dialer{}
 				conn, err := dialer.DialContext(
 					ctx,
-					"udp",
+					"tcp",
 					udpAddress,
 				)
 				if err != nil {
 					return nil, stacktrace.Propagate(
 						err,
-						"failed to dial UDP address: %s",
+						"failed to dial TCP address: %s",
 						udpAddress,
 					)
 				}

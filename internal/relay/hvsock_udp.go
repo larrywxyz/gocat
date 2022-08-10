@@ -60,6 +60,23 @@ func NewHvsockUdp(
 			destinationName:     "UDP connection",
 			destinationAddr:     udpAddress,
 			dialSourceConn: func(ctx context.Context) (net.Conn, error) {
+				dialer := &net.Dialer{}
+				conn, err := dialer.DialContext(
+					ctx,
+					"tcp",
+					udpAddress,
+				)
+				if err != nil {
+					return nil, stacktrace.Propagate(
+						err,
+						"failed to dial TCP address: %s",
+						udpAddress,
+					)
+				}
+
+				return conn, nil
+			},
+			listenTargetConn: func(ctx context.Context) (net.Listener, error) {
 				split := strings.Split(hvsockPath, ":")
 
 				VMID, err := hvsock.GUIDFromString(split[0])
@@ -74,8 +91,7 @@ func NewHvsockUdp(
 					VMID:      VMID,
 					ServiceID: ServiceID,
 				}
-
-				conn, err := hvsock.Dial(addrz)
+				lis, err := hvsock.Listen(addrz)
 				if err != nil {
 					return nil, stacktrace.Propagate(
 						err,
@@ -84,19 +100,19 @@ func NewHvsockUdp(
 					)
 				}
 
-				return conn, nil
-			},
-			listenTargetConn: func(ctx context.Context) (net.Listener, error) {
-				var lc net.ListenConfig
-				listener, err := lc.Listen(ctx, "udp", udpAddress)
-				if err != nil {
-					return nil, stacktrace.Propagate(
-						err,
-						"failed to listen at udp address: %s",
-						udpAddress,
-					)
-				}
-				return listener, nil
+				return lis, nil
+				// var lc net.ListenConfig
+				// listener, err := lc.Listen(ctx, "tcp", udpAddress)
+				// if err != nil {
+				// 	return nil, stacktrace.Propagate(
+				// 		err,
+				// 		"failed to listen at udp address: %s",
+				// 		udpAddress,
+				// 	)
+				// }
+				// log.Println("LISTEN SUCCESS")
+
+				// return listener, nil
 			},
 		},
 	}, nil
