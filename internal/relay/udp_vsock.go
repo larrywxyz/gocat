@@ -89,8 +89,8 @@ func NewUDPtoVsock(
 				if err != nil {
 					return nil, stacktrace.Propagate(
 						err,
-						"failed to dial vsock port: %s",
-						vsockPort,
+						"failed to dial vsock portt: %v",
+						port,
 					)
 				}
 				return conn, nil
