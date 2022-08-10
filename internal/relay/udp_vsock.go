@@ -85,7 +85,7 @@ func NewUDPtoVsock(
 						vsockPort,
 					)
 				}
-				conn, err := vsock.Dial(vsock.Host, uint32(port), nil)
+				conn, err := vsock.Dial(vsock.Host, uint32(5001), nil)
 				if err != nil {
 					return nil, stacktrace.Propagate(
 						err,
