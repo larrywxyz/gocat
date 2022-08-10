@@ -38,7 +38,7 @@ type AbstractDuplexRelay struct {
 func (r *AbstractDuplexRelay) Relay(ctx context.Context) error {
 	listener, err := r.listenTargetConn(ctx)
 	if err != nil {
-		return stacktrace.Propagate(err, "could bind to %s %s", r.destinationName, r.destinationAddr)
+		return stacktrace.Propagate(err, "could not bind to %s %s", r.destinationName, r.destinationAddr)
 	}
 	defer listener.Close()
 
