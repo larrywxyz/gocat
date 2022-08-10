@@ -16,6 +16,7 @@ package relay
 
 import (
 	"context"
+	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -60,33 +61,64 @@ func NewUDPtoVsock(
 			destinationAddr:     vsockPort,
 			bufferSize:          bufferSize,
 			dialSourceConn: func(ctx context.Context) (net.Conn, error) {
-				dialer := &net.Dialer{}
-				conn, err := dialer.DialContext(
-					ctx,
-					"tcp",
-					udpAddress,
-				)
-				if err != nil {
-					return nil, stacktrace.Propagate(
-						err,
-						"failed to dial TCP address: %s",
-						udpAddress,
-					)
-				}
+				// dialer := &net.Dialer{}
+				// conn, err := dialer.DialContext(
+				// 	ctx,
+				// 	"tcp",
+				// 	udpAddress,
+				// )
+				// if err != nil {
+				// 	return nil, stacktrace.Propagate(
+				// 		err,
+				// 		"failed to dial TCP address: %s",
+				// 		udpAddress,
+				// 	)
+				// }
 
-				return conn, nil
-			},
-			listenTargetConn: func(ctx context.Context) (net.Listener, error) {
+				// return conn, nil
+
 				port, err := strconv.ParseInt(vsockPort, 10, 32)
-				lis, err := vsock.Listen(uint32(port), nil)
 				if err != nil {
 					return nil, stacktrace.Propagate(
 						err,
-						"failed to listen at vsock port: %s",
+						"could not parse specified vsock port number %s",
 						vsockPort,
 					)
 				}
-				return lis, nil
+				conn, err := vsock.Dial(2, uint32(port), nil)
+				if err != nil {
+					return nil, stacktrace.Propagate(
+						err,
+						"failed to dial vsock port: %s",
+						vsockPort,
+					)
+				}
+				return conn, nil
+			},
+			listenTargetConn: func(ctx context.Context) (net.Listener, error) {
+				// port, err := strconv.ParseInt(vsockPort, 10, 32)
+				// lis, err := vsock.Listen(uint32(port), nil)
+				// if err != nil {
+				// 	return nil, stacktrace.Propagate(
+				// 		err,
+				// 		"failed to listen at vsock port: %s",
+				// 		vsockPort,
+				// 	)
+				// }
+				// return lis, nil
+
+				var lc net.ListenConfig
+				listener, err := lc.Listen(ctx, "tcp", udpAddress)
+				if err != nil {
+					return nil, stacktrace.Propagate(
+						err,
+						"failed to listen at udp address: %s",
+						udpAddress,
+					)
+				}
+				log.Println("LISTEN SUCCESS")
+
+				return listener, nil
 			},
 		},
 	}, nil

@@ -101,18 +101,6 @@ func NewHvsockUdp(
 				}
 
 				return lis, nil
-				// var lc net.ListenConfig
-				// listener, err := lc.Listen(ctx, "tcp", udpAddress)
-				// if err != nil {
-				// 	return nil, stacktrace.Propagate(
-				// 		err,
-				// 		"failed to listen at udp address: %s",
-				// 		udpAddress,
-				// 	)
-				// }
-				// log.Println("LISTEN SUCCESS")
-
-				// return listener, nil
 			},
 		},
 	}, nil
