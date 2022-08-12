@@ -42,8 +42,8 @@ func NewRootCmd() *cobra.Command {
 		NewFakeCmd(),
 		NewTCPToUnixCmd(),
 		NewUnixToTCPCmd(),
-		NewUDPToVsockCmd(),
-		NewHvsockToUDPCmd(),
+		NewTCPToVsockCmd(),
+		NewHvsockToTCPCmd(),
 		NewVersionCmd(),
 	)
 	return cmdInstance

@@ -26,57 +26,41 @@ import (
 	"github.com/palantir/stacktrace"
 )
 
-type UDPtoVsock struct {
+type TCPtoVsock struct {
 	AbstractDuplexRelay
 }
 
-func NewUDPtoVsock(
+func NewTCPtoVsock(
 	healthCheckInterval time.Duration,
-	udpAddress,
+	tcpAddress,
 	vsockPort string,
 	bufferSize int,
-) (*UDPtoVsock, error) {
-	udpAddressParts := strings.Split(udpAddress, ":")
-	if len(udpAddressParts) != 2 {
+) (*TCPtoVsock, error) {
+	tcpAddressParts := strings.Split(tcpAddress, ":")
+	if len(tcpAddressParts) != 2 {
 		return nil, stacktrace.NewError(
-			"wrong format for udp address %s. Expected <addr>:<port>",
-			udpAddress,
+			"wrong format for tcp address %s. Expected <addr>:<port>",
+			tcpAddress,
 		)
 	}
 
-	_, err := strconv.ParseInt(udpAddressParts[1], 10, 32)
+	_, err := strconv.ParseInt(tcpAddressParts[1], 10, 32)
 	if err != nil {
 		return nil, stacktrace.Propagate(
 			err,
 			"could not parse specified port number %s",
-			udpAddressParts[1],
+			tcpAddressParts[1],
 		)
 	}
 
-	return &UDPtoVsock{
+	return &TCPtoVsock{
 		AbstractDuplexRelay{
 			healthCheckInterval: healthCheckInterval,
-			sourceName:          "UDP connection",
-			destinationName:     "vsock",
+			sourceName:          "vsock",
+			destinationName:     "TCP connection",
 			destinationAddr:     vsockPort,
 			bufferSize:          bufferSize,
 			dialSourceConn: func(ctx context.Context) (net.Conn, error) {
-				// dialer := &net.Dialer{}
-				// conn, err := dialer.DialContext(
-				// 	ctx,
-				// 	"tcp",
-				// 	udpAddress,
-				// )
-				// if err != nil {
-				// 	return nil, stacktrace.Propagate(
-				// 		err,
-				// 		"failed to dial TCP address: %s",
-				// 		udpAddress,
-				// 	)
-				// }
-
-				// return conn, nil
-
 				port, err := strconv.ParseInt(vsockPort, 10, 32)
 				if err != nil {
 					return nil, stacktrace.Propagate(
@@ -96,24 +80,13 @@ func NewUDPtoVsock(
 				return conn, nil
 			},
 			listenTargetConn: func(ctx context.Context) (net.Listener, error) {
-				// port, err := strconv.ParseInt(vsockPort, 10, 32)
-				// lis, err := vsock.Listen(uint32(port), nil)
-				// if err != nil {
-				// 	return nil, stacktrace.Propagate(
-				// 		err,
-				// 		"failed to listen at vsock port: %s",
-				// 		vsockPort,
-				// 	)
-				// }
-				// return lis, nil
-
 				var lc net.ListenConfig
-				listener, err := lc.Listen(ctx, "tcp", udpAddress)
+				listener, err := lc.Listen(ctx, "tcp", tcpAddress)
 				if err != nil {
 					return nil, stacktrace.Propagate(
 						err,
-						"failed to listen at udp address: %s",
-						udpAddress,
+						"failed to listen at tcp address: %s",
+						tcpAddress,
 					)
 				}
 				log.Println("LISTEN SUCCESS")

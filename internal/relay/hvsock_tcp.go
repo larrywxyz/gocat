@@ -25,52 +25,52 @@ import (
 	"github.com/palantir/stacktrace"
 )
 
-type HvsockUDP struct {
+type HvsockTCP struct {
 	AbstractDuplexRelay
 }
 
-func NewHvsockUdp(
+func NewHvsockTcp(
 	healthCheckInterval time.Duration,
 	hvsockPath,
-	udpAddress string,
+	tcpAddress string,
 	bufferSize int,
-) (*HvsockUDP, error) {
-	udpAddressParts := strings.Split(udpAddress, ":")
-	if len(udpAddressParts) != 2 {
+) (*HvsockTCP, error) {
+	tcpAddressParts := strings.Split(tcpAddress, ":")
+	if len(tcpAddressParts) != 2 {
 		return nil, stacktrace.NewError(
-			"wrong format for udp address %s. Expected <addr>:<port>",
-			udpAddress,
+			"wrong format for tcp address %s. Expected <addr>:<port>",
+			tcpAddress,
 		)
 	}
 
-	_, err := strconv.ParseInt(udpAddressParts[1], 10, 32)
+	_, err := strconv.ParseInt(tcpAddressParts[1], 10, 32)
 	if err != nil {
 		return nil, stacktrace.Propagate(
 			err,
 			"could not parse specified port number %s",
-			udpAddressParts[1],
+			tcpAddressParts[1],
 		)
 	}
 
-	return &HvsockUDP{
+	return &HvsockTCP{
 		AbstractDuplexRelay{
 			healthCheckInterval: healthCheckInterval,
 			bufferSize:          bufferSize,
-			sourceName:          "hvsock",
-			destinationName:     "UDP connection",
-			destinationAddr:     udpAddress,
+			sourceName:          "TCP connection",
+			destinationName:     "hvsock",
+			destinationAddr:     tcpAddress,
 			dialSourceConn: func(ctx context.Context) (net.Conn, error) {
 				dialer := &net.Dialer{}
 				conn, err := dialer.DialContext(
 					ctx,
 					"tcp",
-					udpAddress,
+					tcpAddress,
 				)
 				if err != nil {
 					return nil, stacktrace.Propagate(
 						err,
 						"failed to dial TCP address: %s",
-						udpAddress,
+						tcpAddress,
 					)
 				}
 

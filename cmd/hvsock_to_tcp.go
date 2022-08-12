@@ -27,35 +27,35 @@ import (
 	"github.com/sumup-oss/gocat/internal/relay"
 )
 
-func NewUDPToVsockCmd() *cobra.Command {
-	var udpToVsockAddress string
-	var udpToVsockPort string
+func NewHvsockToTCPCmd() *cobra.Command {
+	var hvsockToTcpPath string
+	var hvsockToTcpAddress string
 	var bufferSize int
-	var tcpToUnixHealthCheckInterval time.Duration
+	var unixToTCPHealthCheckDuration time.Duration
 
 	cmdInstance := &cobra.Command{
-		Use:   "udp-to-vsock",
-		Short: "relay from a UDP source to vsock",
-		Long:  `relay from a UDP source to vsock`,
+		Use:   "hvsock-to-tcp",
+		Short: "relay from a hvsock source to tcp clients",
+		Long:  `relay from a hvsock source to tcp clients`,
 		RunE: func(command *cobra.Command, args []string) error {
 			// nolint: gocritic
-			if len(udpToVsockPort) < 0 {
+			if len(hvsockToTcpPath) < 0 {
 				return stacktrace.NewError("blank/empty `src` specified")
 			}
 
 			// nolint: gocritic
-			if len(udpToVsockAddress) < 0 {
+			if len(hvsockToTcpAddress) < 0 {
 				return stacktrace.NewError("blank/empty `dst` specified")
 			}
 
-			relayer, err := relay.NewUDPtoVsock(
-				tcpToUnixHealthCheckInterval,
-				udpToVsockPort,
-				udpToVsockAddress,
+			relayer, err := relay.NewHvsockTcp(
+				unixToTCPHealthCheckDuration,
+				hvsockToTcpPath,
+				hvsockToTcpAddress,
 				bufferSize,
 			)
 			if err != nil {
-				return stacktrace.Propagate(err, "couldn't create relay from TCP to unix socket")
+				return stacktrace.Propagate(err, "couldn't create relay from unix socket to TCP")
 			}
 
 			osSignalCh := make(chan os.Signal, 1)
@@ -70,32 +70,32 @@ func NewUDPToVsockCmd() *cobra.Command {
 			go func() {
 				<-osSignalCh
 				signal.Stop(osSignalCh)
-
 				cancelFunc()
 			}()
 
 			err = relayer.Relay(ctx)
-			if err != nil {
-				return stacktrace.Propagate(err, "couldn't relay from TCP to unix socket")
-			}
-
-			return nil
+			return stacktrace.Propagate(err, "couldn't relay from unix socket to TCP")
 		},
 	}
 
 	cmdInstance.Flags().DurationVar(
-		&tcpToUnixHealthCheckInterval,
+		&unixToTCPHealthCheckDuration,
 		"health-check-interval",
 		30*time.Second,
 		"health check interval for `src`, e.g values are 30m, 60s, 1h.",
 	)
-	cmdInstance.Flags().StringVar(&udpToVsockPort, "src", "", "source of TCP address")
+	cmdInstance.Flags().StringVar(
+		&hvsockToTcpPath,
+		"src",
+		"",
+		"source of unix domain socket",
+	)
 	_ = cmdInstance.MarkFlagRequired("src")
 	cmdInstance.Flags().StringVar(
-		&udpToVsockAddress,
+		&hvsockToTcpAddress,
 		"dst",
 		"",
-		"destination of unix domain socket",
+		"destination to TCP listen",
 	)
 	_ = cmdInstance.MarkFlagRequired("dst")
 	cmdInstance.Flags().IntVar(
@@ -104,5 +104,6 @@ func NewUDPToVsockCmd() *cobra.Command {
 		DefaultBufferSize,
 		"Buffer size in bytes of the data stream",
 	)
+
 	return cmdInstance
 }
