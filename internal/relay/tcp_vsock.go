@@ -73,7 +73,7 @@ func NewTCPtoVsock(
 				if err != nil {
 					return nil, stacktrace.Propagate(
 						err,
-						"failed to dial vsock portt: %v",
+						"failed to dial vsock port: %v",
 						port,
 					)
 				}
