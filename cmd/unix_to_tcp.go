@@ -24,7 +24,7 @@ import (
 	"github.com/palantir/stacktrace"
 	"github.com/spf13/cobra"
 
-	"github.com/sumup-oss/gocat/internal/relay"
+	"gocat/internal/relay"
 )
 
 func NewUnixToTCPCmd() *cobra.Command {
