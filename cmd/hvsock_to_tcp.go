@@ -15,23 +15,15 @@
 package cmd
 
 import (
-	"context"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	"github.com/palantir/stacktrace"
 	"github.com/spf13/cobra"
 
-	"gocat/internal/relay"
+	"gocat/relay"
 )
 
 func NewHvsockToTCPCmd() *cobra.Command {
 	var hvsockToTcpPath string
 	var hvsockToTcpAddress string
-	var bufferSize int
-	var unixToTCPHealthCheckDuration time.Duration
 
 	cmdInstance := &cobra.Command{
 		Use:   "hvsock-to-tcp",
@@ -48,47 +40,22 @@ func NewHvsockToTCPCmd() *cobra.Command {
 				return stacktrace.NewError("blank/empty `dst` specified")
 			}
 
-			relayer, err := relay.NewHvsockTcp(
-				unixToTCPHealthCheckDuration,
+			err := relay.NewHvsockToTCPRelay(
 				hvsockToTcpPath,
 				hvsockToTcpAddress,
-				bufferSize,
 			)
 			if err != nil {
-				return stacktrace.Propagate(err, "couldn't create relay from unix socket to TCP")
+				return stacktrace.Propagate(err, "couldn't create relay from hvsock to TCP")
 			}
-
-			osSignalCh := make(chan os.Signal, 1)
-			defer close(osSignalCh)
-
-			signal.Notify(osSignalCh, os.Interrupt, syscall.SIGTERM)
-
-			ctx, cancelFunc := context.WithCancel(context.Background())
-			defer cancelFunc()
-
-			// Ctrl+C handler
-			go func() {
-				<-osSignalCh
-				signal.Stop(osSignalCh)
-				cancelFunc()
-			}()
-
-			err = relayer.Relay(ctx)
-			return stacktrace.Propagate(err, "couldn't relay from unix socket to TCP")
+			return nil
 		},
 	}
 
-	cmdInstance.Flags().DurationVar(
-		&unixToTCPHealthCheckDuration,
-		"health-check-interval",
-		30*time.Second,
-		"health check interval for `src`, e.g values are 30m, 60s, 1h.",
-	)
 	cmdInstance.Flags().StringVar(
 		&hvsockToTcpPath,
 		"src",
 		"",
-		"source of unix domain socket",
+		"source of hvsock",
 	)
 	_ = cmdInstance.MarkFlagRequired("src")
 	cmdInstance.Flags().StringVar(
@@ -98,12 +65,6 @@ func NewHvsockToTCPCmd() *cobra.Command {
 		"destination to TCP listen",
 	)
 	_ = cmdInstance.MarkFlagRequired("dst")
-	cmdInstance.Flags().IntVar(
-		&bufferSize,
-		"buffer-size",
-		DefaultBufferSize,
-		"Buffer size in bytes of the data stream",
-	)
 
 	return cmdInstance
 }

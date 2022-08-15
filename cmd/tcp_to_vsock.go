@@ -15,23 +15,15 @@
 package cmd
 
 import (
-	"context"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	"github.com/palantir/stacktrace"
 	"github.com/spf13/cobra"
 
-	"gocat/internal/relay"
+	"gocat/relay"
 )
 
 func NewTCPToVsockCmd() *cobra.Command {
-	var tcpToVsockAddress string
 	var tcpToVsockPort string
-	var bufferSize int
-	var tcpToUnixHealthCheckInterval time.Duration
+	var tcpToVsockAddress string
 
 	cmdInstance := &cobra.Command{
 		Use:   "tcp-to-vsock",
@@ -48,61 +40,25 @@ func NewTCPToVsockCmd() *cobra.Command {
 				return stacktrace.NewError("blank/empty `dst` specified")
 			}
 
-			relayer, err := relay.NewTCPtoVsock(
-				tcpToUnixHealthCheckInterval,
+			err := relay.NewTCPToVsockRelay(
 				tcpToVsockPort,
 				tcpToVsockAddress,
-				bufferSize,
 			)
 			if err != nil {
 				return stacktrace.Propagate(err, "couldn't create relay from TCP to unix socket")
 			}
-
-			osSignalCh := make(chan os.Signal, 1)
-			defer close(osSignalCh)
-
-			signal.Notify(osSignalCh, os.Interrupt, syscall.SIGTERM)
-
-			ctx, cancelFunc := context.WithCancel(context.Background())
-			defer cancelFunc()
-
-			// Ctrl+C handler
-			go func() {
-				<-osSignalCh
-				signal.Stop(osSignalCh)
-
-				cancelFunc()
-			}()
-
-			err = relayer.Relay(ctx)
-			if err != nil {
-				return stacktrace.Propagate(err, "couldn't relay from TCP to unix socket")
-			}
-
 			return nil
 		},
 	}
 
-	cmdInstance.Flags().DurationVar(
-		&tcpToUnixHealthCheckInterval,
-		"health-check-interval",
-		30*time.Second,
-		"health check interval for `src`, e.g values are 30m, 60s, 1h.",
-	)
 	cmdInstance.Flags().StringVar(&tcpToVsockPort, "src", "", "source of TCP address")
 	_ = cmdInstance.MarkFlagRequired("src")
 	cmdInstance.Flags().StringVar(
 		&tcpToVsockAddress,
 		"dst",
 		"",
-		"destination of unix domain socket",
+		"destination of vsock",
 	)
 	_ = cmdInstance.MarkFlagRequired("dst")
-	cmdInstance.Flags().IntVar(
-		&bufferSize,
-		"buffer-size",
-		DefaultBufferSize,
-		"Buffer size in bytes of the data stream",
-	)
 	return cmdInstance
 }

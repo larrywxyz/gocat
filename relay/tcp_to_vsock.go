@@ -12,7 +12,7 @@ import (
 	"gocat/internal/relay"
 )
 
-func NewTCPToVsockRelay(tcpToVsockAddress, tcpToVsockPort string) error {
+func NewTCPToVsockRelay(tcpToVsockPort, tcpToVsockAddress string) error {
 	tcpToUnixHealthCheckInterval := 30 * time.Second
 	bufferSize := 16384
 
